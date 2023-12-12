@@ -4,6 +4,7 @@ const fs = require("fs");
 
 let homeContent = "";
 let projectContent = "";
+let registrationContent = "";
 
 fs.readFile("home.html", (err, home) => {
 	if (err) {
@@ -19,6 +20,13 @@ fs.readFile("project.html", (err, project) => {
 	projectContent = project;
 });
 
+fs.readFile("registration.html", (err, registration) => {
+	if (err) {
+		throw err;
+	}
+	registrationContent = registration;
+});
+
 http.createServer((request, response) => {
 	let url = request.url;
 	response.writeHeader(200, { "Content-Type": "text/html" });
@@ -28,7 +36,7 @@ http.createServer((request, response) => {
 			response.end();
 			break;
 		case "/registration":
-			response.write(projectContent);
+			response.write(registrationContent);
 			response.end();
 			break;
 		default:
