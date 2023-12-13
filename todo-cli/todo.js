@@ -44,6 +44,7 @@ const todoList = () => {
 					item.dueDate === today ? "" : item.dueDate
                 }\n`;
         });
+		retStr = retStr.slice(0, -1);
 		return retStr;
     };
 
