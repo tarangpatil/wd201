@@ -73,25 +73,32 @@ describe("Todo Application", function () {
 
   test("Deletes a todo with the given ID if it exists and sends a boolean response", async () => {
     // FILL IN YOUR CODE HERE
-    const todo1 = await agent.post("/todos").send({
-      title: "Buy xbox",
+    // const res = await agent.delete("/todos/1");
+    // expect(res.status).toBe(200);
+    // const parsedResponse = await JSON.parse(res.text);
+    // expect(parsedResponse).toBe(true);
+    // const res2 = await agent.delete("/todos/2");
+    // expect(res.status).toBe(200);
+    // const parseRes2 = await JSON.parse(res2.text);
+    // expect(parseRes2).toBe(true);
+    // const getRes = await agent.get("/todos");
+    // const getData = await JSON.parse(getRes.text);
+    const response1 = await agent.get("/todos");
+    const parsedResponse1 = JSON.parse(response1.text);
+    expect(parsedResponse1.length).toBe(4);
+    const response2 = await agent.post("/todos").send({
+      title: "Buy milk",
       dueDate: new Date().toISOString(),
       completed: false,
     });
-    const todo2 = await agent.post("/todos").send({
-      title: "Buy ps5",
-      dueDate: new Date().toISOString(),
-      completed: false,
-    });
-
-    const res = await agent.delete("/todos/1");
-    const parsedResponse = await JSON.parse(res.text);
-    expect(parsedResponse).toBe(true);
-    const res2 = await agent.delete("/todos/2");
-    const parseRes2 = await JSON.parse(res2.text);
-    expect(parseRes2).toBe(true);
-    const getRes = await agent.get("/todos");
-    const getData = await JSON.parse(getRes.text);
-    expect(getData.length).toBe(4);
+    const parsedResponse2 = JSON.parse(response2.text);
+    const todoID = parsedResponse2.id;
+    const response4 = await agent.get("/todos");
+    const parsedResponse4 = JSON.parse(response4.text);
+    expect(parsedResponse4.length).toBe(5);
+    await agent.delete(`/todos/${todoID}`).send();
+    const response3 = await agent.get("/todos");
+    const parsedResponse3 = JSON.parse(response3.text);
+    expect(parsedResponse3.length).toBe(4);
   });
 });

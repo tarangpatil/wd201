@@ -64,6 +64,7 @@ app.delete("/todos/:id", async function (req, res) {
     res.send(true);
   } catch (err) {
     console.log(err);
+    res.status(422).send(false);
   }
 });
 
