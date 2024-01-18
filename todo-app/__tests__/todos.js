@@ -79,13 +79,19 @@ describe("Todo Application", function () {
       completed: false,
     });
     const todo2 = await agent.post("/todos").send({
-      title: "Buy ps3",
+      title: "Buy ps5",
       dueDate: new Date().toISOString(),
       completed: false,
     });
 
     const res = await agent.delete("/todos/1");
-    const parsedResponse = JSON.parse(res.text);
+    const parsedResponse = await JSON.parse(res.text);
     expect(parsedResponse).toBe(true);
+    const res2 = await agent.delete("/todos/2");
+    const parseRes2 = await JSON.parse(res2.text);
+    expect(parseRes2).toBe(true);
+    const getRes = await agent.get("/todos");
+    const getData = await JSON.parse(getRes.text);
+    expect(getData.length).toBe(4);
   });
 });
