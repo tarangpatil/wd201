@@ -4,9 +4,16 @@ const { Todo } = require("./models");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(__dirname + "/public"));
+app.set("view engine", "ejs");
 
-app.get("/", function (req, res) {
-  res.send("Hello World");
+app.get("/", async function (req, res) {
+  const allTodos = await Todo.getTodos();
+  if (req.accepts("html")) {
+    res.render("index", { allTodos });
+  } else {
+    res.json(allTodos);
+  }
 });
 
 app.get("/todos", async function (req, res) {
