@@ -10,7 +10,12 @@ app.set("view engine", "ejs");
 app.get("/", async function (req, res) {
   const allTodos = await Todo.getTodos();
   if (req.accepts("html")) {
-    res.render("index", { allTodos });
+    const todaysDate = new Date().toISOString().split("T")[0];
+    res.render("index", {
+      overdue: allTodos.filter((todo) => todo.dueDate < todaysDate),
+      dueToday: allTodos.filter((todo) => todo.dueDate === todaysDate),
+      dueLater: allTodos.filter((todo) => todo.dueDate > todaysDate),
+    });
   } else {
     res.json(allTodos);
   }
