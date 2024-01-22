@@ -82,9 +82,9 @@
       window.location.reload();
     }
   }
-  function deleteTodo(event, id) {
-    event.preventDefault();
-    event.stopPropagation();
+  function deleteTodo(id) {
+    // event.preventDefault();
+    // event.stopPropagation();
     console.log("Deleting Todo", id)
     fetch(`/todos/${id}`, {
       method: "delete",
