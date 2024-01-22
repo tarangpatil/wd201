@@ -86,6 +86,7 @@
     const res = await fetch(`/todos/${id}/`, {
       method: "delete",
       headers: { "Content-Type": "application/json", "CSRF-Token": "<%= csrfToken %>", },
+      body:JSON.parse({_csrf:"<%= csrfToken %>"})
     })
     if (res.ok) {
       window.location.reload();
