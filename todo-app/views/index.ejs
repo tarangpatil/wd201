@@ -82,17 +82,24 @@
       window.location.reload();
     }
   }
-  async function deleteTodo(id) {
-    const res = await fetch(`/todos/${id}/`, {
+  function deleteTodo(event, id) {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log("Deleting Todo", id)
+    fetch(`/todos/${id}`, {
       method: "delete",
-      headers: { "Content-Type": "application/json", "CSRF-Token": "<%= csrfToken %>", },
-      body:JSON.parse({_csrf:"<%= csrfToken %>"})
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        "_csrf": "<%= csrfToken %>",
+      })
     })
-    if (res.ok) {
-      window.location.reload();
-    }
+      .then((res) => {
+        if (res.ok) {
+          window.location.reload();
+        }
+      })
+      .catch((err) => console.log(err))
   }
-  console.log("<%=csrfToken%>");
 </script>
 
 </html>

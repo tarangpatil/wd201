@@ -4,7 +4,7 @@
       <input id="<%= `todo-checkbox-${data.id}` %>" type="checkbox" <%=data.completed?"checked":"" %>
       class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 mx-2" onchange="setTodoStatus(<%=data.id%>)" />
       <span class="w-[85%]"><%= data.title %></span>
-      <span class="absolute right-3" onclick="deleteTodo(<%=data.id%>)">
+      <span class="absolute right-3" onclick="deleteTodo(event, <%=data.id%>);">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
         class="w-4 h-4 p-1 box-content hover:bg-red-600 rounded-md transition-colors invisible group-hover:visible">
         <path stroke-linecap="round" stroke-linejoin="round"
