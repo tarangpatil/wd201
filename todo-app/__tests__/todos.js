@@ -50,66 +50,61 @@ describe("Todo Application", function () {
       .get("/")
       .set("Accept", "application/json");
     const parseAbove = JSON.parse(groupedTodosResponse.text);
-    console.log('Grouped Todos Response parsed:',parseAbove);
+    console.log("Grouped Todos Response parsed:", parseAbove);
     const dueTodayCount = parseAbove.length;
     const latestTodo = parseAbove[dueTodayCount - 1];
 
     res = await agent.get("/");
     csrfToken = extractCSRFToken(res);
     const markCompleteRes = await agent
-      .put(`/todos/${latestTodo.id}/markAsCompleted`)
-      .send({ _csrf: csrfToken });
+      .put(`/todos/${latestTodo.id}`)
+      .send({ _csrf: csrfToken, completed: true });
 
     const parseAboveResponse = JSON.parse(markCompleteRes.text);
     expect(parseAboveResponse.completed).toBe(true);
   });
 
-  // test("Fetches all todos in the database using /todos endpoint", async () => {
-  //   await agent.post("/todos").send({
-  //     title: "Buy xbox",
-  //     dueDate: new Date().toISOString(),
-  //     completed: false,
-  //   });
-  //   await agent.post("/todos").send({
-  //     title: "Buy ps3",
-  //     dueDate: new Date().toISOString(),
-  //     completed: false,
-  //   });
-  //   const response = await agent.get("/todos");
-  //   const parsedResponse = JSON.parse(response.text);
+  test("Fetches all todos in the database using /todos endpoint", async () => {
+    const response = await agent
+      .get("/todos")
+      .set("Accept", "application/json");
+    const todos = JSON.parse(response.text);
 
-  //   expect(parsedResponse.length).toBe(4);
-  //   expect(parsedResponse[3]["title"]).toBe("Buy ps3");
-  // });
+    expect(response.statusCode).toBe(200);
+    expect(Array.isArray(todos)).toBe(true);
 
-  // test("Deletes a todo with the given ID if it exists and sends a boolean response", async () => {
-  //   // FILL IN YOUR CODE HERE
-  //   // const res = await agent.delete("/todos/1");
-  //   // expect(res.status).toBe(200);
-  //   // const parsedResponse = await JSON.parse(res.text);
-  //   // expect(parsedResponse).toBe(true);
-  //   // const res2 = await agent.delete("/todos/2");
-  //   // expect(res.status).toBe(200);
-  //   // const parseRes2 = await JSON.parse(res2.text);
-  //   // expect(parseRes2).toBe(true);
-  //   // const getRes = await agent.get("/todos");
-  //   // const getData = await JSON.parse(getRes.text);
-  //   const response1 = await agent.get("/todos");
-  //   const parsedResponse1 = JSON.parse(response1.text);
-  //   expect(parsedResponse1.length).toBe(4);
-  //   const response2 = await agent.post("/todos").send({
-  //     title: "Buy milk",
-  //     dueDate: new Date().toISOString(),
-  //     completed: false,
-  //   });
-  //   const parsedResponse2 = JSON.parse(response2.text);
-  //   const todoID = parsedResponse2.id;
-  //   const response4 = await agent.get("/todos");
-  //   const parsedResponse4 = JSON.parse(response4.text);
-  //   expect(parsedResponse4.length).toBe(5);
-  //   await agent.delete(`/todos/${todoID}`).send();
-  //   const response3 = await agent.get("/todos");
-  //   const parsedResponse3 = JSON.parse(response3.text);
-  //   expect(parsedResponse3.length).toBe(4);
-  // });
+    // Add a condition to check the length of the array
+    if (todos.length > 0) {
+      // Add additional assertions based on your application logic
+      // For example, you might want to check the structure of each todo in the array
+      expect(todos[0]).toHaveProperty("id");
+      expect(todos[0]).toHaveProperty("title");
+      // Add more assertions as needed
+    } else {
+      // Handle the case where there are no todos (adjust as per your application logic)
+      console.warn("No todos found in the response.");
+    }
+  });
+
+  test("Deletes a todo with the given ID if it exists and sends a boolean response", async () => {
+    // Create a todo to be deleted
+    const res = await agent.get("/");
+    const csrfToken = extractCSRFToken(res);
+    console.log(csrfToken);
+    const createResponse = await agent
+      .post("/todos")
+      .send({
+        title: "To be deleted",
+        dueDate: new Date().toISOString(),
+        completed: false,
+        _csrf: csrfToken,
+      })
+      .set("accept", "application/json");
+    expect(createResponse.ok).toBe(true);
+    const createResponseParsed = JSON.parse(createResponse.text);
+    const deleteReq = await agent
+      .delete(`/todos/${createResponseParsed.id}`)
+      .send({ _csrf: csrfToken });
+    expect(deleteReq.text).toBe("true");
+  });
 });

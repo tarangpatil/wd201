@@ -47,33 +47,40 @@
     });
 
     // Send the form data as JSON
-    const res = await fetch("/todos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "CSRF-Token": "<%= csrfToken %>",
-      },
-      body: JSON.stringify(formObject),
-    });
-
-    if (res.ok) {
-      // Handle success, e.g., redirect or update UI
-      console.log("Todo added successfully");
-      window.location.href = "/"; // Redirect to the desired page
-    } else {
-      // Handle error response
-      const data = await res.json();
-      console.error("Error adding todo:", data);
+    if (formObject.title !== "") {
+      const res = await fetch("/todos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "CSRF-Token": "<%= csrfToken %>",
+        },
+        body: JSON.stringify(formObject),
+      });
+      if (res.ok) {
+        // Handle success, e.g., redirect or update UI
+        console.log("Todo added successfully");
+        // window.location.href = "/"; // Redirect to the desired page
+        window.location.reload();
+      } else {
+        // Handle error response
+        const data = await res.json();
+        console.error("Error adding todo:", data);
+      }
     }
   };
 
-  async function completeTodo(id) {
-    const res = await fetch(`/todos/${id}/markAsCompleted`, {
+  async function setTodoStatus(id) {
+    const checkbox = document.querySelector(`#todo-checkbox-${id}`);
+    console.log(id, checkbox);
+    console.log(checkbox.checked);
+    const res = await fetch(`/todos/${id}/`, {
       method: "put",
       headers: { "Content-Type": "application/json", "CSRF-Token": "<%= csrfToken %>", },
+      body: JSON.stringify({ completed: checkbox.checked, })
     })
-    const resData = await res.json();
-    return resData;
+    if (res.ok) {
+      window.location.reload();
+    }
   }
   async function deleteTodo(id) {
     const res = await fetch(`/todos/${id}/`, {

@@ -1,8 +1,8 @@
-<li>
+<li class="Todo-Item">
   <div class="flex h-min py-2">
-    <label class="cursor-pointer hover:bg-purple-200 rounded flex items-center w-96 relative group min-h-8 h-min">
+    <label for="<%= `todo-checkbox-${data.id}` %>" class="cursor-pointer hover:bg-purple-200 rounded flex items-center w-96 relative group min-h-8 h-min">
       <input id="<%= `todo-checkbox-${data.id}` %>" type="checkbox" <%=data.completed?"checked":"" %>
-      class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 mx-2" onchange="completeTodo(<%=data.id%>)" />
+      class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 mx-2" onchange="setTodoStatus(<%=data.id%>)" />
       <span class="w-[85%]"><%= data.title %></span>
       <span class="absolute right-3" onclick="deleteTodo(<%=data.id%>)">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
