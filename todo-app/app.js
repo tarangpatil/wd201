@@ -1,4 +1,4 @@
-const csurf = require("csurf");
+const csurf = require("tiny-csrf");
 const cookieParser = require("cookie-parser");
 const express = require("express");
 const app = express();
@@ -7,17 +7,19 @@ const { Todo, User } = require("./models");
 const passport = require("passport");
 const connectEnsureLogin = require("connect-ensure-login");
 const session = require("express-session");
+const flash = require("connect-flash");
 const LocalStrategy = require("passport-local");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+const path = require("path");
 
+app.use(express.static(__dirname + "/public"));
+app.set("views", path.join(__dirname, "views"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(__dirname + "/public"));
 app.set("view engine", "ejs");
 app.use(cookieParser("it's a secret"));
-app.use(csurf({ cookie: true }));
-
+app.use(flash());
 app.use(
   session({
     secret: "my-super-secret-key-too-asoiw",
@@ -26,6 +28,12 @@ app.use(
     },
   })
 );
+app.use(csurf("123456789iamasecret987654321look"));
+app.use(function (request, response, next) {
+  response.locals.messages = request.flash();
+  next();
+});
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -40,7 +48,7 @@ passport.use(
         .then(async (user) => {
           const result = await bcrypt.compare(password, user.password);
           if (result) return done(null, user);
-          else done("Invalid password");
+          else done(null, false, { message: "Invalid password" });
         })
         .catch((err) => err);
     }
@@ -71,9 +79,15 @@ app.get("/signup", (req, res) => {
 });
 
 app.post("/users", async (req, res) => {
-  console.log("First name:", req.body.firstName);
+  console.log("Creating user: ", req.body);
+  if (req.body.firstName === "" || req.body.email === "") {
+    req.flash(
+      "error",
+      "Please provide at least your first name and email address."
+    );
+    return res.redirect("/signup");
+  }
   const hashPwd = await bcrypt.hash(req.body.password, saltRounds);
-  console.log(hashPwd);
   try {
     const user = await User.create({
       firstName: req.body.firstName,
@@ -83,13 +97,21 @@ app.post("/users", async (req, res) => {
     });
     req.login(user, (err) => {
       if (err) {
-        console.log("REQ LOGIN ERROR", err);
+        console.log(err);
       }
-      console.log("AFTER SIGNUP USER: ", req.user);
       res.redirect("/todos");
     });
   } catch (error) {
     console.log(error);
+    if (error.name === "SequelizeValidationError") {
+      const validationErrors = error.errors.map((err) => err.message);
+      req.flash("error", validationErrors);
+      res.redirect("/signup");
+    } else {
+      // Handle other errors
+      req.flash("error", "An error occurred during user creation.");
+      res.redirect("/signup");
+    }
   }
 });
 
@@ -99,9 +121,11 @@ app.get("/login", (req, res) => {
 
 app.post(
   "/session",
-  passport.authenticate("local", { failureRedirect: "/login" }),
+  passport.authenticate("local", {
+    failureRedirect: "/login",
+    failureFlash: true,
+  }),
   (req, res) => {
-    console.log(req.user);
     res.redirect("/todos");
   }
 );
@@ -117,7 +141,6 @@ app.get(
   "/todos",
   connectEnsureLogin.ensureLoggedIn(),
   async function (req, res) {
-    console.log("REQ USERID: ", req.user.dataValues.id);
     const overdue = await Todo.overdue(req.user.dataValues.id);
     const dueToday = await Todo.dueToday(req.user.dataValues.id);
     const dueLater = await Todo.dueLater(req.user.dataValues.id);

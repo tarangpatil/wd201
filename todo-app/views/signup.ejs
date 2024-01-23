@@ -59,10 +59,12 @@
             Sign up
           </button>
         </form>
+        <% if (messages.error && messages.error.length > 0) { %>
+        <div class="bg-red-500 text-white p-2 mb-4 rounded">
+          <%= messages.error.join("<br />") %>
+        </div>
+        <% } %>
       </div>
     </div>
   </body>
-  <script>
-    console.log("<% csrfToken %>");
-  </script>
 </html>

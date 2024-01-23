@@ -67,6 +67,7 @@
     </div>
   </body>
   <script>
+    console.log("CSRF TOKEN: <%= csrfToken %>");
     const form = document.querySelector("form");
     form.onsubmit = async function (e) {
       e.preventDefault();
@@ -111,7 +112,10 @@
           "Content-Type": "application/json",
           "CSRF-Token": "<%= csrfToken %>",
         },
-        body: JSON.stringify({ completed: checkbox.checked }),
+        body: JSON.stringify({
+          completed: checkbox.checked,
+          _csrf: "<%= csrfToken %>",
+        }),
       });
       if (res.ok) {
         window.location.reload();
