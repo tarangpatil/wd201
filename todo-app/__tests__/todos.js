@@ -9,6 +9,16 @@ function extractCSRFToken(res) {
   return $("[name=_csrf]").val();
 }
 
+const login = async (agent, username, password) => {
+  let res = await agent.get("/login");
+  let csrfToken = extractCSRFToken(res);
+  res = await agent.post("/session").send({
+    email: username,
+    password,
+    _csrf: csrfToken,
+  });
+};
+
 describe("Todo Application", function () {
   beforeAll(async () => {
     await db.sequelize.sync({ force: true });
@@ -25,8 +35,32 @@ describe("Todo Application", function () {
     }
   });
 
+  test("Sign up testing", async () => {
+    let res = await agent.get("/signup");
+    const csrfToken = extractCSRFToken(res);
+    res = await agent.post("/users").send({
+      firstName: "Test",
+      lastName: "User A",
+      email: "usera@gmail.com",
+      password: "userARocks",
+      _csrf: csrfToken,
+    });
+    expect(res.statusCode).toBe(302);
+  });
+
+  test("Sign out test", async () => {
+    let res = await agent.get("/todos");
+    expect(res.statusCode).toBe(200);
+    res = await agent.get("/signout");
+    expect(res.statusCode).toBe(302);
+    res = await agent.get("/todos");
+    expect(res.statusCode).toBe(302);
+  });
+
   test("Creates a todo and responds with json at /todos POST endpoint", async () => {
-    const res = await agent.get("/");
+    const agent = request.agent(server);
+    await login(agent, "usera@gmail.com", "userARocks");
+    const res = await agent.get("/todos");
     const csrfToken = extractCSRFToken(res);
     const response = await agent.post("/todos").send({
       title: "Buy milk",
@@ -38,7 +72,9 @@ describe("Todo Application", function () {
   });
 
   test("Marks a todo with the given ID as complete", async () => {
-    let res = await agent.get("/");
+    const agent = request.agent(server);
+    await login(agent, "usera@gmail.com", "userARocks");
+    let res = await agent.get("/todos");
     let csrfToken = extractCSRFToken(res);
     const response = await agent.post("/todos").send({
       title: "Buy milk",
@@ -47,48 +83,26 @@ describe("Todo Application", function () {
       _csrf: csrfToken,
     });
     const groupedTodosResponse = await agent
-      .get("/")
+      .get("/todos")
       .set("Accept", "application/json");
     const parseAbove = JSON.parse(groupedTodosResponse.text);
-    console.log("Grouped Todos Response parsed:", parseAbove);
-    const dueTodayCount = parseAbove.length;
-    const latestTodo = parseAbove[dueTodayCount - 1];
+    const dueTodayCount = parseAbove.dueToday.length;
+    const latestTodo = parseAbove.dueToday[dueTodayCount - 1];
 
-    res = await agent.get("/");
+    res = await agent.get("/todos");
     csrfToken = extractCSRFToken(res);
     const markCompleteRes = await agent
       .put(`/todos/${latestTodo.id}`)
       .send({ _csrf: csrfToken, completed: true });
-
     const parseAboveResponse = JSON.parse(markCompleteRes.text);
     expect(parseAboveResponse.completed).toBe(true);
   });
 
-  test("Fetches all todos in the database using /todos endpoint", async () => {
-    const response = await agent
-      .get("/todos")
-      .set("Accept", "application/json");
-    const todos = JSON.parse(response.text);
-
-    expect(response.statusCode).toBe(200);
-    expect(Array.isArray(todos)).toBe(true);
-
-    // Add a condition to check the length of the array
-    if (todos.length > 0) {
-      // Add additional assertions based on your application logic
-      // For example, you might want to check the structure of each todo in the array
-      expect(todos[0]).toHaveProperty("id");
-      expect(todos[0]).toHaveProperty("title");
-      // Add more assertions as needed
-    } else {
-      // Handle the case where there are no todos (adjust as per your application logic)
-      console.warn("No todos found in the response.");
-    }
-  });
-
   test("Deletes a todo with the given ID if it exists and sends a boolean response", async () => {
+    const agent = request.agent(server);
+    await login(agent, "usera@gmail.com", "userARocks");
     // Create a todo to be deleted
-    const res = await agent.get("/");
+    const res = await agent.get("/todos");
     const csrfToken = extractCSRFToken(res);
     console.log(csrfToken);
     const createResponse = await agent

@@ -1,30 +1,137 @@
-<div class="">
-  <h5>Overdue</h5>
-  <p id="count-overdue"><%= overdue.length %></p>
-  <ul class="list-none">
-    <% for (let i = 0; i < overdue.length; i++) { %>
-      <%- include("todo.ejs", { data: overdue[i].dataValues }) %>
-    <% } %>
-  </ul>
-  <h5>Due Today</h5>
-  <p id="count-due-today"><%= dueToday.length %></p>
-  <ul class="list-none">
-    <% for (let i = 0; i < dueToday.length; i++) { %>
-      <%- include("todo.ejs", { data: dueToday[i].dataValues }) %>
-    <% } %>
-  </ul>
-  <h5>Due Later</h5>
-  <p id="count-due-later"><%= dueLater.length %></p>
-  <ul class="list-none">
-    <% for (let i = 0; i < dueLater.length; i++) { %>
-      <%- include("todo.ejs", { data: dueLater[i].dataValues }) %>
-    <% } %>
-  </ul>
-  <h5>Completed Items</h5>
-  <p id="count-completed"><%= completedItems.length %></p>
-  <ul class="list-none">
-    <% for (let i = 0; i < completedItems.length; i++) { %>
-      <%- include("todo.ejs", { data: completedItems[i].dataValues }) %>
-    <% } %>
-  </ul>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div class="grid grid-cols-6">
+      <div class="col-start-3 col-span-2">
+        <%- include("header.ejs") %>
+        <a href="/signout">signout</a>
+        <form action="/todos" method="">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <div class="flex gap-2 py-4">
+            <div class="flex-auto">
+              <input
+                type="text"
+                placeholder="What's next?"
+                name="title"
+                class="border border-gray-300 text-gray-900 w-full rounded p-2 text-sm leading-4"
+                required
+              />
+            </div>
+            <div class="flex-auto">
+              <input type="date" class="text-black" name="dueDate" />
+            </div>
+            <div class="flex-none">
+              <button
+                type="submit"
+                class="bg-green-600 text-white px-5 py-1.5 rounded font-medium mr-2 mb-2"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </form>
+        <div class="">
+          <h5>Overdue</h5>
+          <p id="count-overdue"><%= overdue.length %></p>
+          <ul class="list-none">
+            <% for (let i = 0; i < overdue.length; i++) { %> <%-
+            include("todo.ejs", { data: overdue[i].dataValues }) %> <% } %>
+          </ul>
+          <h5>Due Today</h5>
+          <p id="count-due-today"><%= dueToday.length %></p>
+          <ul class="list-none">
+            <% for (let i = 0; i < dueToday.length; i++) { %> <%-
+            include("todo.ejs", { data: dueToday[i].dataValues }) %> <% } %>
+          </ul>
+          <h5>Due Later</h5>
+          <p id="count-due-later"><%= dueLater.length %></p>
+          <ul class="list-none">
+            <% for (let i = 0; i < dueLater.length; i++) { %> <%-
+            include("todo.ejs", { data: dueLater[i].dataValues }) %> <% } %>
+          </ul>
+          <h5>Completed Items</h5>
+          <p id="count-completed"><%= completedItems.length %></p>
+          <ul class="list-none">
+            <% for (let i = 0; i < completedItems.length; i++) { %> <%-
+            include("todo.ejs", { data: completedItems[i].dataValues }) %> <% }
+            %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    const form = document.querySelector("form");
+    form.onsubmit = async function (e) {
+      e.preventDefault();
+
+      // Collect form data
+      const formData = new FormData(form);
+      const formObject = {};
+      formData.forEach((value, key) => {
+        formObject[key] = value;
+      });
+
+      // Send the form data as JSON
+      if (formObject.title !== "") {
+        const res = await fetch("/todos", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "CSRF-Token": "<%= csrfToken %>",
+          },
+          body: JSON.stringify(formObject),
+        });
+        if (res.ok) {
+          // Handle success, e.g., redirect or update UI
+          console.log("Todo added successfully");
+          // window.location.href = "/"; // Redirect to the desired page
+          window.location.reload();
+        } else {
+          // Handle error response
+          const data = await res.json();
+          console.error("Error adding todo:", data);
+        }
+      }
+    };
+
+    async function setTodoStatus(id) {
+      const checkbox = document.querySelector(`#todo-checkbox-${id}`);
+      console.log(id, checkbox);
+      console.log(checkbox.checked);
+      const res = await fetch(`/todos/${id}/`, {
+        method: "put",
+        headers: {
+          "Content-Type": "application/json",
+          "CSRF-Token": "<%= csrfToken %>",
+        },
+        body: JSON.stringify({ completed: checkbox.checked }),
+      });
+      if (res.ok) {
+        window.location.reload();
+      }
+    }
+    function deleteTodo(id) {
+      console.log("Deleting Todo", id);
+      fetch(`/todos/${id}`, {
+        method: "delete",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          _csrf: "<%= csrfToken %>",
+        }),
+      })
+        .then((res) => {
+          if (res.ok) {
+            window.location.reload();
+          }
+        })
+        .catch((err) => console.log(err));
+    }
+  </script>
+</html>
