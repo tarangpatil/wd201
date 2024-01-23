@@ -71,6 +71,9 @@ passport.deserializeUser((id, done) => {
 });
 
 app.get("/", async function (req, res) {
+  if (req.isAuthenticated()) {
+    return res.redirect("/todos");
+  }
   res.render("index", { csrfToken: req.csrfToken() });
 });
 
@@ -79,22 +82,20 @@ app.get("/signup", (req, res) => {
 });
 
 app.post("/users", async (req, res) => {
-  console.log("Creating user: ", req.body);
-  if (req.body.firstName === "" || req.body.email === "") {
-    req.flash(
-      "error",
-      "Please provide at least your first name and email address."
-    );
+  if (req.body.firstName.length === 0 || req.body.email.length === 0) {
+    req.flash("error", "First name, email and password required");
     return res.redirect("/signup");
   }
   const hashPwd = await bcrypt.hash(req.body.password, saltRounds);
   try {
-    const user = await User.create({
+    console.log("Creating user: ", req.body);
+    let user = await User.create({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       email: req.body.email,
-      password: hashPwd,
+      password: hashPwd, // Assuming you validate the password elsewhere
     });
+    console.log("User created:", user.dataValues);
     req.login(user, (err) => {
       if (err) {
         console.log(err);
