@@ -84,12 +84,15 @@ app.get("/signup", (req, res) => {
 app.post("/users", async (req, res) => {
   const hashPwd = await bcrypt.hash(req.body.password, saltRounds);
   try {
+    if (req.body.password === "") {
+      throw new Error("Validation notEmpty on password failed");
+    }
     console.log("Creating user: ", req.body);
     let user = await User.create({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       email: req.body.email,
-      password: hashPwd, // Assuming you validate the password elsewhere
+      password: hashPwd,
     });
     console.log("User created:", user.dataValues);
     req.login(user, (err) => {
