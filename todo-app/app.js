@@ -82,10 +82,6 @@ app.get("/signup", (req, res) => {
 });
 
 app.post("/users", async (req, res) => {
-  if (req.body.firstName.length === 0 || req.body.email.length === 0) {
-    req.flash("error", "First name, email and password required");
-    return res.redirect("/signup");
-  }
   const hashPwd = await bcrypt.hash(req.body.password, saltRounds);
   try {
     console.log("Creating user: ", req.body);
